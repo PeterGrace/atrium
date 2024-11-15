@@ -1,3 +1,4 @@
+use crate::runner::api::app::bsky::richtext::facet;
 use crate::commands::Command;
 use anyhow::{Context, Result};
 use api::agent::bluesky::{AtprotoServiceType, BSKY_CHAT_DID};
@@ -5,6 +6,7 @@ use api::types::string::{AtIdentifier, Datetime, Handle};
 use api::types::LimitedNonZeroU8;
 use bsky_sdk::agent::config::{Config, FileStore};
 use bsky_sdk::api;
+use bsky_sdk::rich_text::RichText;
 use bsky_sdk::BskyAgent;
 use serde::Serialize;
 use std::ffi::OsStr;
@@ -413,6 +415,10 @@ impl Runner {
                         api::app::bsky::embed::images::MainData { images }.into(),
                     )),
                 ));
+                let facets = match RichText::new_with_detect_facets(args.text.clone()).await {
+                    Ok(m) => m.facets,
+                    Err(_) => None
+                };
                 self.print(
                     &self
                         .agent
@@ -420,7 +426,7 @@ impl Runner {
                             created_at: Datetime::now(),
                             embed,
                             entities: None,
-                            facets: None,
+                            facets,
                             labels: None,
                             langs: None,
                             reply: None,
